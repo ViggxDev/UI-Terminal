@@ -102,6 +102,8 @@ def runCommand(command):
         nav.goToPath(command[3:])
     elif command == "start .":
         nav.openPath()
+    elif command == "code .":
+        print("Code")
     else:
         print('Command not found!')
     updateCurrentDir()
