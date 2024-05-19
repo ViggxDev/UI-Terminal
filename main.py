@@ -16,7 +16,7 @@ root.configure(bg=bgClr)
 
 # Fonts
 titleFont = ("Helvetica", 24)
-currentDirFont = ("Helvetica", 12)
+initialCurrentDirFontSize = 12
 
 # UI Elements
 title = tk.Label(root, text="TERMINAL", font=titleFont, bg=bgClr, fg='white')
@@ -24,9 +24,10 @@ title.pack()
 
 commandLine = tk.Entry(root, textvariable=tk.StringVar(None), width=700)
 commandLine.pack(side=tk.BOTTOM, pady=20)
+commandLine.focus()
 
-currentDirectory = tk.Label(root, font=currentDirFont, text=nav.getCurrentPath(), bg=bgClr, fg='white', pady="10px")
-currentDirectory.pack(side=tk.BOTTOM)
+currentDirectory = tk.Label(root, font=("Helvetica", initialCurrentDirFontSize), text=nav.getCurrentPath(), bg=bgClr, fg='white', pady="10px")
+currentDirectory.pack(side=tk.BOTTOM, fill=tk.X)
 
 # Create a frame for the directory contents
 contentFrame = tk.Frame(root)
@@ -39,18 +40,30 @@ canvas.pack(fill=tk.BOTH, expand=True)
 # Create a frame inside the canvas to hold the directory items
 scrollable_frame = tk.Frame(canvas, bg=bgClr)
 window = canvas.create_window((0, 0), window=scrollable_frame, anchor="center")
-canvas.itemconfig(window, anchor="center")  # Add this line
+canvas.itemconfig(window, anchor="center")
 
 # Update the scroll region whenever the size of the frame changes
 def onFrameConfigure(event=None):
     canvas.configure(scrollregion=canvas.bbox("all"))
-    canvas.itemconfig(window, anchor="center")  # Move this line here
+    canvas.itemconfig(window, anchor="center")
 
 scrollable_frame.bind("<Configure>", onFrameConfigure)
 
 # Functions
+def adjustFontSize(label, text, initialFontSize):
+    currentFontSize = initialFontSize
+    label.config(font=("Helvetica", currentFontSize))
+    label.update_idletasks()  # Make sure label's geometry is updated
+
+    while label.winfo_reqwidth() > label.winfo_width() and currentFontSize > 6:
+        currentFontSize -= 1
+        label.config(font=("Helvetica", currentFontSize))
+        label.update_idletasks()  # Update geometry after changing font size
+
 def updateCurrentDir():
-    currentDirectory.config(text=nav.getCurrentPath())
+    current_path = nav.getCurrentPath()
+    currentDirectory.config(text=current_path)
+    adjustFontSize(currentDirectory, current_path, initialCurrentDirFontSize)
 
 def displayDirectoryContents():
     global loopUpdate
@@ -62,10 +75,8 @@ def displayDirectoryContents():
     # List the contents of the current directory
     current_path = nav.getCurrentPath()
     for item in os.listdir(current_path):
-        item_label = tk.Label(scrollable_frame, text=item, font=currentDirFont, bg=bgClr, fg='white')
-        item_label.pack(fill=tk.BOTH, expand=True)  # Pack with expand=True
-
-        # Center the label after it's packed
+        item_label = tk.Label(scrollable_frame, text=item, font=("Helvetica", initialCurrentDirFontSize), bg=bgClr, fg='white')
+        item_label.pack(fill=tk.BOTH, expand=True)
         item_label.pack_configure(anchor="center")
 
     # Ensure the scrollable_frame width matches the canvas width
@@ -77,14 +88,12 @@ def displayDirectoryContents():
     # Recenter the window
     canvas.itemconfig(window, anchor="center")
 
-    # Set anchor for the window after configuring canvas
-    canvas.itemconfig(window, anchor="center")
-
-    if loopUpdate == True:
+    if loopUpdate:
         loopUpdate = False
         root.after(100, displayDirectoryContents)
 
 root.after_idle(displayDirectoryContents)
+updateCurrentDir()
 
 def _on_mouse_wheel(event):
     canvas.yview_scroll(-1 * (event.delta // 120), "units")
@@ -103,7 +112,9 @@ def runCommand(command):
     elif command == "start .":
         nav.openPath()
     elif command == "code .":
-        print("Code")
+        nav.openCode()
+    elif command == "home:":
+        nav.setPathToDefault()
     else:
         print('Command not found!')
     updateCurrentDir()
@@ -125,11 +136,13 @@ def keyPress(event):
             newWord = f'cd {nav.autoFill("cd")}'
             commandLine.delete(0, tk.END)
             commandLine.insert(0, newWord)
+            commandLine.icursor(tk.END)
         else:
             lastKeyPress = "Tab"
             newWord = f'cd {nav.autoFill(commandLine.get())}'
             commandLine.delete(0, tk.END)
             commandLine.insert(0, newWord)
+            commandLine.icursor(tk.END)
     else:
         lastKeyPress = key
 

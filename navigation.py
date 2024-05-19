@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 
 currentPath = ""
 
@@ -36,6 +37,20 @@ def goToPath(toAdd):
 def openPath():
     path = os.path.realpath(currentPath)
     os.startfile(path)
+
+def openCode():
+    print(f"Opening VS Code at path: {currentPath}")
+
+    vscode_path = r"C:\Users\viggo\AppData\Local\Programs\Microsoft VS Code\Code.exe"
+
+    try:
+        subprocess.run([vscode_path, currentPath], check=True)
+    except FileNotFoundError:
+        print("Error: 'code' command not found. Make sure Visual Studio Code is installed and the command is available in your PATH.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error: The subprocess encountered an error: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 #Auto fill
 possibilites = []
