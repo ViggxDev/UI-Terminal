@@ -22,8 +22,11 @@ initialCurrentDirFontSize = 12
 title = tk.Label(root, text="TERMINAL", font=titleFont, bg=bgClr, fg='white')
 title.pack()
 
-commandLine = tk.Entry(root, textvariable=tk.StringVar(None), width=700)
-commandLine.pack(side=tk.BOTTOM, pady=20)
+error = tk.Label(root, text="", font=("Helvetica", initialCurrentDirFontSize), bg=bgClr, fg="red")
+error.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
+
+commandLine = tk.Entry(root, textvariable=tk.StringVar(None), width=600)
+commandLine.pack(side=tk.BOTTOM)
 commandLine.focus()
 
 currentDirectory = tk.Label(root, font=("Helvetica", initialCurrentDirFontSize), text=nav.getCurrentPath(), bg=bgClr, fg='white', pady="10px")
@@ -103,20 +106,24 @@ canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
 # Run wanted command
 def runCommand(command):
+    error.configure(text="")
     if len(command) <= 0:
         return
     if command == "cd .." or command == "cd..":
         nav.goBackPath()
     elif "cd" in command:
-        nav.goToPath(command[3:])
+        r = nav.goToPath(command[3:])
+        if r == False:
+            error.configure(text="PATH NOT FOUND!")
     elif command == "start .":
         nav.openPath()
     elif command == "code .":
-        nav.openCode()
+        r = nav.openCode()
+        error.configure(text=r)
     elif command == "home:":
-        nav.setPathToDefault()
+        nav.setPathToDefault(True)
     else:
-        print('Command not found!')
+        error.configure(text="COMMAND NOT FOUND!")
     updateCurrentDir()
     displayDirectoryContents()
 

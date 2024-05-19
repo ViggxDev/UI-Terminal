@@ -12,9 +12,9 @@ def getConfigItem(item):
     except:
         print(f"Could not find item : {item}")
 
-def setPathToDefault():
+def setPathToDefault(change=False):
     global currentPath
-    if currentPath != "":
+    if currentPath != "" and change == False:
         return
     currentPath = getConfigItem("defaultDirectory")
 
@@ -31,8 +31,9 @@ def goToPath(toAdd):
     newPath = os.path.realpath(currentPath + f"/{toAdd}")
     if os.path.isdir(newPath):
         currentPath = newPath
+        return True
     else:
-        print(f"Directory '{toAdd}' does not exist.")
+        return False
     
 def openPath():
     path = os.path.realpath(currentPath)
@@ -45,12 +46,13 @@ def openCode():
 
     try:
         subprocess.run([vscode_path, currentPath], check=True)
+        return ""
     except FileNotFoundError:
-        print("Error: 'code' command not found. Make sure Visual Studio Code is installed and the command is available in your PATH.")
+        return "Error: 'code' command not found. Make sure Visual Studio Code is installed and the command is available in your PATH."
     except subprocess.CalledProcessError as e:
-        print(f"Error: The subprocess encountered an error: {e}")
+        return f"Error: The subprocess encountered an error: {e}"
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        return "An unexpected error occurred: {e}"
 
 #Auto fill
 possibilites = []
